@@ -1,0 +1,28 @@
+
+[10:23:53]
+
+== hard IRQ handler run time ==
+
+  32:virtio0-stats   count 1   avg 10.4 us   max 10.4 us
+                   usecs : count    |distribution                            |
+           8 -> 15       : 1        |****************************************|
+
+  35:virtio9-input   count 1   avg 3.1 us   max 3.1 us
+                   usecs : count    |distribution                            |
+           2 -> 3        : 1        |****************************************|
+
+  37:virtio1-req.0   count 1   avg 3.4 us   max 3.4 us
+                   usecs : count    |distribution                            |
+           2 -> 3        : 1        |****************************************|
+
+  49:virtio7-input.0   count 17   avg 3.6 us   max 7.5 us
+                   usecs : count    |distribution                            |
+           1 -> 1        : 1        |***                                     |
+           2 -> 3        : 12       |****************************************|
+           4 -> 7        : 4        |*************                           |
+
+  50:virtio7-output.   count 17   avg 2.9 us   max 4.2 us
+                   usecs : count    |distribution                            |
+           1 -> 1        : 1        |**                                      |
+           2 -> 3        : 15       |****************************************|
+           4 -> 7        : 1        |**                                      |

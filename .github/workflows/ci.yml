@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang llvm libbpf-dev libelf-dev zlib1g-dev
+      - name: Build bpftool from source
+        run: |
+          git clone --depth 1 --recurse-submodules --shallow-submodules \
+            https://github.com/libbpf/bpftool.git /tmp/bpftool
+          make -C /tmp/bpftool/src -j"$(nproc)"
+          echo "BPFTOOL=/tmp/bpftool/src/bpftool" >> "$GITHUB_ENV"
+          uname -r; clang --version | head -1; /tmp/bpftool/src/bpftool version
+      - name: Build
+        run: make BPFTOOL="$BPFTOOL"
+      - name: Smoke test (loads into the runner's kernel)
+        run: |
+          set +e
+          ls -d /sys/kernel/tracing/events/irq /sys/kernel/debug/tracing/events/irq 2>&1
+          sudo ./build/drvlat -m hardirq,softirq,irqthread -d 3 > smoke.log 2>&1
+          rc=$?
+          if [ $rc -ne 0 ]; then
+            echo "::error title=drvlat exit $rc::$(tail -n 25 smoke.log | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')"
+            exit $rc
+          fi
+          cat smoke.log
+          sudo ./build/drvlat -m softirq -d 2 --json > smoke.json 2>smoke.err || \
+            { echo "::error title=json run::$(tail -n 10 smoke.err | sed ':a;N;$!ba;s/\n/%0A/g')"; exit 1; }
+          python3 -c "import json,sys; [json.loads(l) for l in open('smoke.json') if l.strip()]"
